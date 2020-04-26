@@ -5,6 +5,7 @@ from server.worker import SocketListener
 from router import router
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 h = HTTPHandler(HTTPParser(), router=router)

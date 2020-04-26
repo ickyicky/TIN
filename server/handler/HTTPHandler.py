@@ -40,7 +40,10 @@ class HTTPHandler:
         """
         Make handler object calklable to handle request
         """
-        headers, method, data = self.parse_request(conn)
+        try:
+            headers, method, data = self.parse_request(conn)
+        except Exception as e:
+            log.warn("Request prasing error:", str(e))
 
         for middleware in self.middleware:
             status, error = middleware(headers, method, data)
@@ -53,11 +56,11 @@ class HTTPHandler:
         except Router.MethodNotFound as e:
             status = Statuses.NOT_FOUND
             response = HTTPResponse(status)
-            log.warn(e)
+            log.warn(str(e))
         except Router.MethodNotAllowed as e:
             status = Statuses.NOT_ALLOWED
             response = HTTPResponse(status)
-            log.warn(e)
+            log.warn(str(e))
         except Exception as e:
             status = Statuses.SERVER_ERROR
             response = HTTPResponse(status, traceback.format_exc())

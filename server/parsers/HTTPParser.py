@@ -23,9 +23,9 @@ class HTTPParser:
             k, v = line.decode().lower().split(": ")
             headers[k] = v
 
-        log.debug("headers:", headers)
-        log.debug("method:", method)
-        log.debug("path:", path)
-        log.debug("request_data", request_data)
+        log.debug("headers:", str(headers))
+        log.debug("method:", str(method))
+        log.debug("path:", str(path))
+        log.debug("request_data", str(request_data))
 
         return headers, (method, path), request_data
