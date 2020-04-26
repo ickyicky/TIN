@@ -43,7 +43,7 @@ class HTTPHandler:
         try:
             headers, method, data = self.parse_request(conn)
         except Exception as e:
-            log.warn("Request prasing error:", str(e))
+            log.warn("Request prasing error: {}", str(e))
 
         for middleware in self.middleware:
             status, error = middleware(headers, method, data)

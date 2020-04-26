@@ -53,9 +53,9 @@ class Router:
 
             params = params.split("&")
             params = dict(p.split("=") for p in params)
-            log.debug("Params:", str(params))
+            log.debug("Params: {}", str(params))
         except Exception as e:
-            log.debug("Parsing params failed due to error:", str(e))
+            log.debug("Parsing params failed due to error: {}", str(e))
 
         for path, methods in self.endpoints.items():
             if re.match(path, path_raw):
