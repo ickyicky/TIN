@@ -1,10 +1,18 @@
 import logging
+import socket
 import enum
 import traceback
 from ..router import Router
 from ..response import HTTPResponse, Statuses
+from ..request import HTTPRequest
+from ..headers import HTTPHeaders
+from .HTTPExceptions import HTTPException
 
 log = logging.getLogger(__name__)
+
+
+class ClosedConnection(Exception):
+    pass
 
 
 class HTTPHandler:
@@ -23,9 +31,13 @@ class HTTPHandler:
         for beeing transfered (receive full data)
         """
         initial_data = conn.recv(self.packet_size)
+
+        if not initial_data:
+            raise ClosedConnection()
+
         headers, method, data = self.parser(initial_data)
 
-        while len(data) < int(headers.get("content-length", 0)):
+        while len(data) < int(headers.get("Content-Length", 0)):
             data += conn.recv(self.packet_size)
 
         return headers, method, data
@@ -36,23 +48,29 @@ class HTTPHandler:
         """
         conn.send(response.encode())
 
-    def __call__(self, conn):
+    def receive(self, conn):
         """
-        Make handler object calklable to handle request
+        Function for receiving request
         """
         try:
             headers, method, data = self.parse_request(conn)
+        except (ClosedConnection, socket.timeout):
+            raise ClosedConnection()
         except Exception as e:
-            log.warn(f"Request prasing error: {str(e)}")
+            log.warn(f"Request prasing error: {repr(e)}")
+            raise HTTPException(status=Statuses.BAD_REQUEST, message="Invalid request")
 
-        for middleware in self.middleware:
-            status, error = middleware(headers, method, data)
-            if error:
-                self.return_(conn, status, error)
+        headers = HTTPHeaders(headers)
 
+        return HTTPRequest(headers=headers, method=method, data=data)
+
+    def handle_request(self, request):
+        """
+        Produces response for request
+        """
         try:
-            method_func = self.router.route(method)
-            response = method_func(data=data)
+            method_func = self.router.route(request.method)
+            response = method_func(request=request)
         except Router.MethodNotFound as e:
             status = Statuses.NOT_FOUND
             response = HTTPResponse(status)
@@ -61,9 +79,52 @@ class HTTPHandler:
             status = Statuses.NOT_ALLOWED
             response = HTTPResponse(status)
             log.warn(str(e))
-        except Exception as e:
-            status = Statuses.SERVER_ERROR
-            response = HTTPResponse(status, traceback.format_exc())
-            log.exception(e)
 
-        self.return_(conn, response)
+        return response
+
+    def process_request(self, request):
+        """
+        Process request by all middleware
+        """
+        for middleware in self.middleware:
+            middleware.process_request(request)
+
+    def process_response(self, response):
+        """
+        Process response by all middleware
+        """
+        for middleware in self.middleware:
+            middleware.process_response(response)
+
+    def __call__(self, conn):
+        """
+        Make handler object callable to handle request
+        """
+
+        close_connection = False
+
+        while not close_connection:
+            try:
+                try:
+                    request = self.receive(conn)
+                    self.process_request(request)
+                    response = self.handle_request(request)
+                except HTTPException as e:
+                    log.warn(f"{e.status} {e.message}")
+                    response = HTTPResponse(e.status, e.message)
+                except ClosedConnection:
+                    close_connection = True
+                    break
+
+                self.process_response(response)
+                self.return_(conn, response)
+            except Exception as e:
+                status = Statuses.SERVER_ERROR
+                response = HTTPResponse(status, traceback.format_exc())
+                log.exception(e)
+
+            close_connection = response.close_connection()
+            if not close_connection:
+                conn.settimeout(response.timeout())
+            log.info(f"{response.status} {response.data}")
+            self.return_(conn, response)

@@ -11,4 +11,5 @@ services:
     ports:
       - "12345:12345"
     volumes:
-      - ./data:/app/data:z,rw
+      # - ./data:/app/data:z,rw
+      - .:/app:z,rw

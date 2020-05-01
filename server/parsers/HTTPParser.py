@@ -10,7 +10,6 @@ class HTTPParser:
     def __call__(self, data):
         """
         Callable method for parsing request
-        TODO HTTPRequest class
         """
         headers_data, request_data = data.split(b"\r\n\r\n")
         headers_data = headers_data.split(b"\r\n")
