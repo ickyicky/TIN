@@ -12,10 +12,10 @@ class HTTPResponse:
         if headers["Connection"] == "keep-alive" and "Keep-Alive" not in headers:
             headers.update({"Keep-Alive": "timeout=5, max=1000"})
 
-        if "Content-Length" not in headers:
+        if "Content-Length" not in headers and data:
             headers.update({"Content-Length": len(data)})
 
-        if "Content-Type" not in headers:
+        if "Content-Type" not in headers and data:
             headers.update({"Content-Type": "application/octet-stream"})
 
         self.headers = HTTPHeaders(headers)

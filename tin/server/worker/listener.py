@@ -1,5 +1,6 @@
 import socket
 import logging
+from _thread import start_new_thread
 
 log = logging.getLogger(__name__)
 
@@ -16,13 +17,18 @@ class SocketListener:
         self.addr = (address, port)
         self.handler = handler
         self.ssl_context = ssl_context
+        self.socket = None
 
-        self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    def init_socket(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         log.debug("Socket initialized")
 
         self.socket.bind(self.addr)
         log.debug(f"Socket bound to addr: {self.addr}")
+
+        if self.ssl_context:
+            self.socket = self.ssl_context.wrap_socket(self.socket, server_side=True)
+            log.debug(f"Socket ssl context set")
 
     def listen(self):
         """
@@ -34,27 +40,25 @@ class SocketListener:
         """
         Procedure for receiving single request
         """
-        if self.ssl_context:
-            with self.ssl_context.wrap_socket(self.socket, server_side=True) as socket:
-                self._receive(socket)
-        else:
-            self._receive(self.socket)
+        self._receive(self.socket)
 
     def serve(self):
         """
         Seves threaded handlers for each connection
         """
+        self.init_socket()
         self.listen()
         # TODO
         while True:
             self.receive()
 
+        self.close()
+
     def _receive(self, socket):
         conn, addr = socket.accept()
 
-        with conn:
-            log.debug(f"Received connection from {addr}")
-            self.handler(conn)
+        log.debug(f"Received connection from {addr}")
+        start_new_thread(self.handler, (conn,))
 
     def close(self):
         self.socket.close()

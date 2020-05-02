@@ -1,6 +1,18 @@
 version: '3.5'
 
+networks:
+  tin:
+    driver: bridge
+
 services:
+  database:
+    restart: unless-stopped
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: passwd
+    networks:
+      - tin
+
   app:
     restart: unless-stopped
     build:
@@ -11,5 +23,26 @@ services:
     ports:
       - "12345:12345"
     volumes:
-      # - ./data:/app/data:z,rw
-      - .:/app:z,rw
+      - ./tin:/app/tin:z,rw
+      - ./data:/app/data:z,rw
+      - ./conf:/app/conf:z
+    networks:
+      - tin
+    command: ["python", "-m", "tin", "-c", "/app/conf/config.json", "--start"]
+  
+  sslapp:
+    restart: unless-stopped
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: tin_server:latest
+    container_name: sslapp
+    ports:
+      - "12346:12345"
+    volumes:
+      - ./tin:/app/tin:z,rw
+      - ./data:/app/data:z,rw
+      - ./conf:/app/conf:z
+    networks:
+      - tin
+    command: ["python", "-m", "tin", "-c", "/app/conf/config.json", "--ssl", "--start"]

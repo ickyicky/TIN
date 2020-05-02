@@ -19,7 +19,7 @@ class HTTPParser:
         headers = {"protocol": protocol}
 
         for line in headers_data[1:]:
-            k, v = line.decode().lower().split(": ")
+            k, v = line.decode().split(": ")
             headers[k] = v
 
         log.debug(f"headers: {str(headers)}")

@@ -1,6 +1,7 @@
 FROM python:slim
 
 RUN mkdir /app
+RUN mkdir /app/tin
 
 ARG bsp_username="user"
 ARG bsp_group="group"
@@ -11,6 +12,8 @@ WORKDIR /app
 
 ENV TZ=Europe/Warsaw
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt update && apt install postgresql gcc libpq-dev -y
+RUN python -m pip install pyjwt sqlalchemy psycopg2
 
-COPY . /app
-CMD ["python", "server.py"]
+COPY ./tin /app/tin
+CMD ["python", "-m", "tin", "-c", "/app/config.json", "--start"]

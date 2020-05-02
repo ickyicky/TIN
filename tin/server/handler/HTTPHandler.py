@@ -89,12 +89,12 @@ class HTTPHandler:
         for middleware in self.middleware:
             middleware.process_request(request)
 
-    def process_response(self, response):
+    def process_response(self, response, request):
         """
         Process response by all middleware
         """
         for middleware in self.middleware:
-            middleware.process_response(response)
+            middleware.process_response(response, request)
 
     def __call__(self, conn):
         """
@@ -116,15 +116,16 @@ class HTTPHandler:
                     close_connection = True
                     break
 
-                self.process_response(response)
-                self.return_(conn, response)
+                self.process_response(response, request)
             except Exception as e:
                 status = Statuses.SERVER_ERROR
                 response = HTTPResponse(status, traceback.format_exc())
                 log.exception(e)
 
             close_connection = response.close_connection()
-            if not close_connection:
-                conn.settimeout(response.timeout())
             log.info(f"{response.status} {response.data}")
             self.return_(conn, response)
+            if not close_connection:
+                conn.settimeout(response.timeout())
+
+        conn.close()
