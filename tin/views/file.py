@@ -63,5 +63,6 @@ def ListDir(dir_path, request):
     try:
         content = os.listdir(os.path.join("/app/data", dir_path))
         return HTTPResponse(Statuses.OK, str(content))
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        raise e
         return HTTPResponse(Statuses.NOT_FOUND)
