@@ -25,6 +25,6 @@ class HTTPParser:
         log.debug(f"headers: {str(headers)}")
         log.debug(f"method: {str(method)}")
         log.debug(f"path: {str(path)}")
-        log.debug(f"request_data: {str(request_data)}")
+        log.debug(f"request_data head: {str(request_data)[:20]}")
 
         return headers, (method, path), request_data

@@ -3,11 +3,12 @@ from .server.handler import HTTPHandler
 from .server.worker import SocketListener
 from .server.middleware.AuthGuardian import AuthGuardian
 from .server.middleware.DatabaseMiddleware import DatabaseMiddleware
+from .server.middleware.HTTPHeaders import HTTPHeaders
 from .router import router
 from .auth.Auth import Authorization
 from . import domain
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 import logging
 import ssl
 import argparse
@@ -27,8 +28,8 @@ def get_dbssn(config, echo=False):
     db_uri = config["db_uri"]
 
     engine = create_engine(db_uri, echo=echo)
-    Session = sessionmaker(autoflush=True, autocommit=False, bind=engine)
-    dbssn = Session()
+    Session = scoped_session(sessionmaker(autoflush=True, autocommit=False, bind=engine))
+    dbssn = Session
     try:
         engine.connect()
         return dbssn
@@ -56,7 +57,8 @@ if __name__ == "__main__":
     with open(args.config) as f:
         config = json.load(f)
 
-    dbssn = get_dbssn(config)
+    dbssn_factory = get_dbssn(config, echo=True)
+    dbssn = dbssn_factory()
 
     if args.init_database:
         setup_database(dbssn)
@@ -85,10 +87,11 @@ if __name__ == "__main__":
 
     auth_module = Authorization(user_model=domain.User, secret=config["secret"])
     middleware = [
-        DatabaseMiddleware(dbssn_factory=lambda: get_dbssn(config)),
+        HTTPHeaders(cdtime=60, keep_alive=True),
+        DatabaseMiddleware(dbssn_factory=dbssn_factory),
         AuthGuardian(auth_module),
     ]
     h = HTTPHandler(HTTPParser(), router=router, middleware=middleware)
     server = SocketListener(h, address="0.0.0.0", port=12345, ssl_context=context)
-
+    dbssn.close()
     server.serve()

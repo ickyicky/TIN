@@ -1,22 +1,15 @@
 from ..headers.HTTPHeaders import HTTPHeaders
+import logging
 
+log = logging.getLogger(__name__)
 
 class HTTPResponse:
     def __init__(self, status, data=None, headers={}):
         self.status = status
+        if isinstance(data, str):
+            data = data.encode()
         self.data = data
 
-        if "Connection" not in headers:
-            headers.update({"Connection": "keep-alive"})
-
-        if headers["Connection"] == "keep-alive" and "Keep-Alive" not in headers:
-            headers.update({"Keep-Alive": "timeout=5, max=1000"})
-
-        if "Content-Length" not in headers and data:
-            headers.update({"Content-Length": len(data)})
-
-        if "Content-Type" not in headers and data:
-            headers.update({"Content-Type": "application/octet-stream"})
 
         self.headers = HTTPHeaders(headers)
 
@@ -34,9 +27,6 @@ class HTTPResponse:
 
         if self.headers:
             content += self.headers.encode()
-
-        if isinstance(self.data, str):
-            self.data = self.data.encode()
 
         while not content.endswith(b"\r\n\r\n"):
             content += b"\r\n"

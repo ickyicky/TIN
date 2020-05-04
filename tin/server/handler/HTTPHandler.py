@@ -91,9 +91,12 @@ class HTTPHandler:
 
     def process_response(self, response, request):
         """
-        Process response by all middleware
+        Process response by all middleware.
+        I want to reverse the order so it kind of
+        encapsulates request and allow for session
+        closeing.
         """
-        for middleware in self.middleware:
+        for middleware in self.middleware[::-1]:
             middleware.process_response(response, request)
 
     def __call__(self, conn):
@@ -111,6 +114,7 @@ class HTTPHandler:
                     response = self.handle_request(request)
                 except HTTPException as e:
                     log.warn(f"{e.status} {e.message}")
+                    request = HTTPRequest({}, None)
                     response = HTTPResponse(e.status, e.message)
                 except ClosedConnection:
                     close_connection = True
@@ -123,7 +127,7 @@ class HTTPHandler:
                 log.exception(e)
 
             close_connection = response.close_connection()
-            log.info(f"{response.status} {response.data}")
+            log.info(f"{response.status} {response.data} {response.headers._headers}")
             self.return_(conn, response)
             if not close_connection:
                 conn.settimeout(response.timeout())

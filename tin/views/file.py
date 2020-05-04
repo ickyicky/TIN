@@ -1,6 +1,7 @@
 from ..server.response import Statuses, HTTPResponse
 from ..server.middleware.AuthGuardian import needs_authorization
 import os
+import json
 
 
 @needs_authorization
@@ -59,10 +60,10 @@ def MakeDir(dir_path, request):
 
 
 @needs_authorization
-def ListDir(dir_path, request):
+def ListDir(dir_path="", request=None):
     try:
         content = os.listdir(os.path.join("/app/data", dir_path))
-        return HTTPResponse(Statuses.OK, str(content))
+        return HTTPResponse(Statuses.OK, json.dumps(content))
     except FileNotFoundError as e:
         raise e
         return HTTPResponse(Statuses.NOT_FOUND)

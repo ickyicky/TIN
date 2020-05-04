@@ -25,3 +25,6 @@ class HTTPHeaders:
 
     def get(self, key):
         return self._headers.get(key)
+
+    def __contains__(self, key):
+        return key in self._headers
