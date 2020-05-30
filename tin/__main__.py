@@ -27,7 +27,7 @@ def setup_database(dbssn):
 def get_dbssn(config, echo=False):
     db_uri = config["db_uri"]
 
-    engine = create_engine(db_uri, echo=echo)
+    engine = create_engine(db_uri, echo=echo, pool_size=20, max_overflow=10)
     Session = scoped_session(
         sessionmaker(autoflush=True, autocommit=False, bind=engine)
     )

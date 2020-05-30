@@ -21,7 +21,11 @@ class HTTPResponse:
         if self.headers.get("Connection") == "close":
             return None
 
-        return int(self.headers.get("Keep-Alive").split(", ")[0].split("=")[1])
+        try:
+            return int(self.headers.get("Keep-Alive").split(", ")[0].split("=")[1])
+        except:
+            return None
+
 
     def encode(self):
         content = f"HTTP/1.1 {self.status.value} {self.status.name}\r\n".encode()

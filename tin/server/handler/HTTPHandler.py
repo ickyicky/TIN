@@ -31,6 +31,7 @@ class HTTPHandler:
         for beeing transfered (receive full data)
         """
         initial_data = conn.recv(self.packet_size)
+        log.warn(initial_data)
 
         if not initial_data:
             raise ClosedConnection()
