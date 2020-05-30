@@ -7,4 +7,5 @@ class Statuses(enum.Enum):
     NOT_ALLOWED = 405
     UNAUTHORIZED = 401
     OK = 200
+    PARTIAL_CONTENT = 206
     SERVER_ERROR = 500

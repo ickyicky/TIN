@@ -3,13 +3,14 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 class HTTPResponse:
-    def __init__(self, status, data=None, headers={}):
+    def __init__(self, status, data=None, message=None, headers={}):
+        data = data or message
         self.status = status
         if isinstance(data, str):
             data = data.encode()
         self.data = data
-
 
         self.headers = HTTPHeaders(headers)
 

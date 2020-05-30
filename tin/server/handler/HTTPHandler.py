@@ -108,13 +108,14 @@ class HTTPHandler:
 
         while not close_connection:
             try:
+                request = None
                 try:
                     request = self.receive(conn)
                     self.process_request(request)
                     response = self.handle_request(request)
                 except HTTPException as e:
                     log.warn(f"{e.status} {e.message}")
-                    request = HTTPRequest({}, None)
+                    request = request or HTTPRequest({}, None)
                     response = HTTPResponse(e.status, e.message)
                 except ClosedConnection:
                     close_connection = True
@@ -127,7 +128,9 @@ class HTTPHandler:
                 log.exception(e)
 
             close_connection = response.close_connection()
-            log.info(f"{response.status} {response.data} {response.headers._headers}")
+            log.info(
+                f"{response.status} {len(response.data) if response.data else 0} {response.headers._headers}"
+            )
             self.return_(conn, response)
             if not close_connection:
                 conn.settimeout(response.timeout())

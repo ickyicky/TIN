@@ -1,6 +1,7 @@
 import hashlib
 import random
 import string
+import enum
 
 from sqlalchemy import (
     Column,
@@ -28,7 +29,9 @@ class PasswordAuthMixIn:
     @classmethod
     def password_hash(cls, password):
         rand = random.SystemRandom()
-        salt = "".join(rand.choice(string.ascii_letters + string.digits) for i in range(16))
+        salt = "".join(
+            rand.choice(string.ascii_letters + string.digits) for i in range(16)
+        )
         return salt + hashlib.sha1((salt + password).encode("UTF-8")).hexdigest()
 
     def password_set(self, password):
@@ -36,10 +39,15 @@ class PasswordAuthMixIn:
 
 
 class User(DBObject, PasswordAuthMixIn):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
     htpasswd = Column(Unicode(100))
     username = Column(Unicode(100))
     first_name = Column(Unicode(100))
     last_name = Column(Unicode(100))
+    role = Column(Integer)
+
+    class Role(enum.Enum):
+        user = 1
+        admin = 2

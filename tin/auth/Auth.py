@@ -29,10 +29,7 @@ class Authorization:
             log.debug(decoded)
             claim = datetime.datetime.fromtimestamp(float(decoded["expires"]))
             log.debug(claim)
-            assert (
-                claim
-                > datetime.datetime.utcnow()
-            )
+            assert claim > datetime.datetime.utcnow()
             user = (
                 request.dbssn.query(self.user_model)
                 .filter(self.user_model.id == int(decoded["user_id"]))

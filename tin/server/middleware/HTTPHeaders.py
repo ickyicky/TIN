@@ -20,4 +20,3 @@ class HTTPHeaders:
 
         if "Content-Type" not in response.headers and response.data:
             response.headers.update({"Content-Type": "application/octet-stream"})
-

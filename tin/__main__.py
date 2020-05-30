@@ -28,7 +28,9 @@ def get_dbssn(config, echo=False):
     db_uri = config["db_uri"]
 
     engine = create_engine(db_uri, echo=echo)
-    Session = scoped_session(sessionmaker(autoflush=True, autocommit=False, bind=engine))
+    Session = scoped_session(
+        sessionmaker(autoflush=True, autocommit=False, bind=engine)
+    )
     dbssn = Session
     try:
         engine.connect()
@@ -46,9 +48,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-i", "--init-database", help="Initialize database tables", action="store_true"
     )
-    parser.add_argument(
-        "--add-superuser", help="Add superuser", action="store_true"
-    )
+    parser.add_argument("--add-superuser", help="Add superuser", action="store_true")
     parser.add_argument("--start", help="Start server", action="store_true")
     args = parser.parse_args()
 
