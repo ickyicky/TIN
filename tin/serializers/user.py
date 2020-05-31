@@ -1,5 +1,8 @@
 from . import base
 from .. import domain
+import logging
+
+log = logging.getLogger(__name__)
 
 USERNAME_REGEX = r"^[A-Za-z0-9\_]+$"
 
@@ -9,6 +12,7 @@ def password_is_secure(password):
     assert any(
         (x.isalpha() for x in password)
     ), "password must contain at least one letter"
+    return password
 
 
 class UserSerializer(base.ModelSerializer):

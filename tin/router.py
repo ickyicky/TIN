@@ -15,7 +15,7 @@ router.register(("GET", r"/dir", ListDir))
 
 router.register(("POST", r"/authorize", authorize))
 
+router.register(("PATCH", r"/users/(?P<user_id>[0-9]+)", users.modify))
+router.register(("DELETE", r"/users/(?P<user_id>[0-9]+)", users.delete))
 router.register(("GET", r"/users", users.get))
 router.register(("POST", r"/users", users.create))
-router.register(("POST", r"/users/(?P<user_id>[0-9]+)", users.modify))
-router.register(("DELETE", r"/users/(?P<user_id>[0-9]+)", users.delete))

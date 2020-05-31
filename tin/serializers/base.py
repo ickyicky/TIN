@@ -53,7 +53,7 @@ class ModelSerializer:
 
     @classmethod
     def validate(cls, data, request=None):
-        result = {}
+        result = data
 
         for field in cls.Meta.fields:
             validator = getattr(cls, field)
@@ -92,7 +92,8 @@ class ModelSerializer:
 
         obj = cls.Meta.model()
         for k, v in data.items():
-            setattr(obj, k, v)
+            if v is not None:
+                setattr(obj, k, v)
 
         cls.additional_modifications(data, request, obj)
 
@@ -109,7 +110,8 @@ class ModelSerializer:
             raise HTTPException(status=Statuses.NOT_FOUND, message="Not found")
 
         for k, v in data.items():
-            setattr(obj, k, v)
+            if v is not None:
+                setattr(obj, k, v)
 
         cls.additional_modifications(data, request, obj)
 

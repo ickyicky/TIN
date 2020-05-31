@@ -38,7 +38,7 @@ def create(request):
 
 
 @needs_role(User.Role.admin.value)
-def modify(request, user_id):
+def modify(user_id, request):
     try:
         data = json.loads(request.data)
         data["id"] = int(user_id)
@@ -50,7 +50,7 @@ def modify(request, user_id):
 
 
 @needs_role(User.Role.admin.value)
-def delete(request, user_id):
+def delete(user_id, request):
     try:
         user_id = int(user_id)
     except:
