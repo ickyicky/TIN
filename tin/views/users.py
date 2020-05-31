@@ -1,33 +1,66 @@
 from ..server.response import Statuses, HTTPResponse
+from ..server.middleware.AuthGuardian import needs_role
+from ..serializers.user import UserSerializer, UserWriteSerializer
 import json
 from ..domain import User
 
 
-def validate_string(string, name):
-    assert len(string) <= 100, f"{name} too long"
-    assert len(string) >= 10, f"{name} too short"
-    assert all(
-        (x.isascii() for x in string)
-    ), f"{name} must contain only ascii characters"
+@needs_role(User.Role.admin.value)
+def get(request, limit=None, offset=None):
+    try:
+        if limit:
+            limit = int(limit)
+        if offset:
+            offset = int(offset)
+    except:
+        return HTTPResponse(Statuses.BAD_REQUEST, "Invalid limit or offset")
+
+    users = request.dbssn.query(User).order_by(User.id).all()
+    content = []
+
+    for user in users:
+        content.append(UserSerializer.parse(user))
+
+    return HTTPResponse(
+        Statuses.OK, json.dumps(content), headers={"Content-Type": "applicaion/json"},
+    )
 
 
-def assert_password_is_secure(password):
-    validate_string(password, "password")
-    assert any((x.isdigit() for x in password)), "password must contain 1 digit"
-    assert any(
-        (x.isalpha() for x in password)
-    ), "password must contain at least one letter"
-
-
+@needs_role(User.Role.admin.value)
 def create(request):
     try:
         data = json.loads(request.data)
     except:
         return HTTPResponse(Statuses.BAD_REQUEST, "Invalid payload")
 
+    UserWriteSerializer.create(data, request)
+    return HTTPResponse(Statuses.OK)
+
+
+@needs_role(User.Role.admin.value)
+def modify(request, user_id):
     try:
-        assert_password_is_secure(data["password"])
-    except AssertionError as e:
-        return HTTPResponse(Statuses.BAD_REQUEST, e.args[0])
-    except KeyError as e:
-        return HTTPResponse(Statuses.BAD_REQUEST, f"Missing key: {e.args[0]}")
+        data = json.loads(request.data)
+        data["id"] = int(user_id)
+    except:
+        return HTTPResponse(Statuses.BAD_REQUEST, "Invalid payload")
+
+    UserWriteSerializer.modify(data, request)
+    return HTTPResponse(Statuses.OK)
+
+
+@needs_role(User.Role.admin.value)
+def delete(request, user_id):
+    try:
+        user_id = int(user_id)
+    except:
+        return HTTPResponse(Statuses.BAD_REQUEST, "Invalid payload")
+
+    user = request.dbssn.query(User).filter_by(id=user_id).first()
+    if user is None:
+        return HTTPResponse(Statuses.NOT_FOUND)
+
+    request.dbssn.delete(user)
+    request.dbssn.commit()
+
+    return HTTPResponse(Statuses.OK)

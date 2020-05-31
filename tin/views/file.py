@@ -108,26 +108,41 @@ def MakeDir(dir_path, request):
 
 
 @needs_authorization
-def ListDir(dir_path="", request=None):
+def ListDir(dir_path="", request=None, info="False"):
+    if info.lower() in ("1", "yes", "true", "t"):
+        info = True
+    elif info.lower() in ("0", "no", "false", "f"):
+        info = False
+    else:
+        return HTTPResponse(Statuses.BAD_REQUEST)
+
     try:
         assert not dir_path.startswith("/")
-        content = {}
         dir_path = os.path.join("/app/data", dir_path)
-        for item in os.listdir(dir_path):
-            file_path = os.path.join(dir_path, item)
-            content[item] = {
-                "type": "file" if os.path.isfile(file_path) else "directory",
-                "size": os.path.getsize(file_path),
-                "atime": datetime.fromtimestamp(
-                    os.path.getatime(file_path)
-                ).isoformat(),
-                "ctime": datetime.fromtimestamp(
-                    os.path.getctime(file_path)
-                ).isoformat(),
-                "mtime": datetime.fromtimestamp(
-                    os.path.getmtime(file_path)
-                ).isoformat(),
-            }
+
+        if info:
+            content = []
+            for item in os.listdir(dir_path):
+                file_path = os.path.join(dir_path, item)
+                content.append(
+                    {
+                        "name": item,
+                        "type": "file" if os.path.isfile(file_path) else "directory",
+                        "size": os.path.getsize(file_path),
+                        "atime": datetime.fromtimestamp(
+                            os.path.getatime(file_path)
+                        ).isoformat(),
+                        "ctime": datetime.fromtimestamp(
+                            os.path.getctime(file_path)
+                        ).isoformat(),
+                        "mtime": datetime.fromtimestamp(
+                            os.path.getmtime(file_path)
+                        ).isoformat(),
+                    }
+                )
+        else:
+            content = os.listdir(dir_path)
+
         return HTTPResponse(
             Statuses.OK,
             json.dumps(content),

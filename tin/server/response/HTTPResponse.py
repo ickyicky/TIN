@@ -26,7 +26,6 @@ class HTTPResponse:
         except:
             return None
 
-
     def encode(self):
         content = f"HTTP/1.1 {self.status.value} {self.status.name}\r\n".encode()
 
