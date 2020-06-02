@@ -12,8 +12,8 @@ def get(request, limit=None, offset=None):
             limit = int(limit)
         if offset:
             offset = int(offset)
-        assert limit >= 1
-        assert offset >= 0
+        assert limit is None or limit >= 1
+        assert offset is None or offset >= 0
     except:
         return HTTPResponse(Statuses.BAD_REQUEST, "Invalid limit or offset")
 
