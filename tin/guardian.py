@@ -3,6 +3,8 @@ from .domain import PathLock
 from .server.response import Statuses
 from .server.handler.HTTPExceptions import HTTPException
 
+log = logging.getLogger(__name__)
+
 
 class ResourceGuardian:
     """
@@ -28,7 +30,7 @@ class ResourceGuardian:
 
     def interferes(self, lock):
         if self.path.startswith(lock.path) or lock.path.startswith(self.path):
-            operations = (self.operation.value, lock.operation)
+            operations = (self.operation.value, lock.method)
             if operations not in self.SAFE_OPERATIONS:
                 return True
 
@@ -40,10 +42,12 @@ class ResourceGuardian:
 
         lock = PathLock(path=self.path, method=self.operation.value)
         self.request.dbssn.add(lock)
+        self.request.dbssn.flush()
         self.request.dbssn.commit()
         self.lock = lock
 
     def release(self):
+        log.debug("unlocking resource...")
         self.request.dbssn.delete(self.lock)
         self.request.dbssn.commit()
 
@@ -72,6 +76,7 @@ class lock_path:
             request.resource_guardian.prepare(
                 kwargs.get(self.path_arg, ""), self.operation
             )
+            log.debug("locking resource...")
             request.resource_guardian.perform_lock()
             return func(*args, request=request, **kwargs)
 
