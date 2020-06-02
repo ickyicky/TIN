@@ -51,3 +51,16 @@ class User(DBObject, PasswordAuthMixIn):
     class Role(enum.Enum):
         user = 1
         admin = 2
+
+
+class PathLock(DBObject):
+    __tablename__ = "path_locks"
+
+    id = Column(Integer, primary_key=True)
+    path = Column(Unicode(2000))
+    method = Column(Integer)
+
+    class Method(enum.Enum):
+        read = 0
+        write = 1
+        delete = 2

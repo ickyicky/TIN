@@ -4,6 +4,7 @@ from .server.worker import SocketListener
 from .server.middleware.AuthGuardian import AuthGuardian
 from .server.middleware.DatabaseMiddleware import DatabaseMiddleware
 from .server.middleware.HTTPHeaders import HTTPHeaders
+from .guardian import ResourceGuardianMidddleware
 from .router import router
 from .auth.Auth import Authorization
 from . import domain
@@ -92,6 +93,7 @@ if __name__ == "__main__":
         HTTPHeaders(cdtime=60, keep_alive=True),
         DatabaseMiddleware(dbssn_factory=dbssn_factory),
         AuthGuardian(auth_module),
+        ResourceGuardianMidddleware(),
     ]
     h = HTTPHandler(HTTPParser(), router=router, middleware=middleware)
     server = SocketListener(h, address="0.0.0.0", port=12345, ssl_context=context)

@@ -1,5 +1,6 @@
 from ..server.response import Statuses, HTTPResponse
 from ..server.middleware.AuthGuardian import needs_authorization
+from ..guardian import lock_path
 import os
 import json
 import re
@@ -7,6 +8,7 @@ from datetime import datetime
 
 
 @needs_authorization
+@lock_path("file_path", lock_path.Method.read)
 def FileGet(file_path, request):
     range_ = request.headers.get("Range")
     offset = 0
@@ -48,6 +50,7 @@ def FileGet(file_path, request):
 
 
 @needs_authorization
+@lock_path("file_path", lock_path.Method.write)
 def FilePost(file_path, request):
     range_ = request.headers.get("Content-Range")
     offset = 0
@@ -87,6 +90,7 @@ def FilePost(file_path, request):
 
 
 @needs_authorization
+@lock_path("file_path", lock_path.Method.delete)
 def FileDelete(file_path, request):
     try:
         assert not file_path.startswith("/")
@@ -102,6 +106,7 @@ def FileDelete(file_path, request):
 
 
 @needs_authorization
+@lock_path("dir_path", lock_path.Method.write)
 def MakeDir(dir_path, request):
     try:
         assert not dir_path.startswith("/")
@@ -114,6 +119,7 @@ def MakeDir(dir_path, request):
 
 
 @needs_authorization
+@lock_path("dir_path", lock_path.Method.read)
 def ListDir(dir_path="", request=None, info="False"):
     if info.lower() in ("1", "yes", "true", "t"):
         info = True
@@ -161,6 +167,7 @@ def ListDir(dir_path="", request=None, info="False"):
 
 
 @needs_authorization
+@lock_path("dir_path", lock_path.Method.delete)
 def DeleteDir(dir_path, request, recursive="False"):
     if recursive.lower() in ("1", "yes", "true", "t"):
         recursive = True

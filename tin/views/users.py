@@ -12,13 +12,19 @@ def get(request, limit=None, offset=None):
             limit = int(limit)
         if offset:
             offset = int(offset)
+        assert limit >= 1
+        assert offset >= 0
     except:
         return HTTPResponse(Statuses.BAD_REQUEST, "Invalid limit or offset")
 
-    users = request.dbssn.query(User).order_by(User.id).all()
+    users = request.dbssn.query(User).order_by(User.id)
+    if offset:
+        users = users.offset(offset)
+    if limit:
+        users = users.limit(limit)
     content = []
 
-    for user in users:
+    for user in users.all():
         content.append(UserSerializer.parse(user))
 
     return HTTPResponse(

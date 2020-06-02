@@ -102,7 +102,15 @@ class HTTPHandler:
         closeing.
         """
         for middleware in self.middleware[::-1]:
-            middleware.process_response(response, request)
+            try:
+                middleware.process_response(response, request)
+            except HTTPException as e:
+                log.warn(f"{e.status} {e.message}")
+                response = HTTPResponse(e.status, e.message)
+            except Exception as e:
+                log.debug(e)
+
+        return response
 
     def __call__(self, conn):
         """
@@ -123,18 +131,14 @@ class HTTPHandler:
                 response = HTTPResponse(e.status, e.message)
             except ClosedConnection:
                 close_connection = True
-                break
             except Exception as e:
                 status = Statuses.SERVER_ERROR
                 response = HTTPResponse(status)
                 log.exception(e)
 
-            try:
-                self.process_response(response, request)
-            except Exception as e:
-                status = Statuses.SERVER_ERROR
-                response = HTTPResponse(status)
-                log.exception(e)
+            response = self.process_response(response, request)
+            if close_connection:
+                break
 
             close_connection = response.close_connection()
             log.info(

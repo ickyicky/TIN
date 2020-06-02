@@ -22,4 +22,4 @@ router.register(("DELETE", r"/users/(?P<user_id>[0-9]+)", users.delete))
 router.register(("GET", r"/users", users.get))
 router.register(("POST", r"/users", users.create))
 
-router.register(("POST", r"produce-exception", lambda x: int("ASD") - x))
+router.register(("POST", r"/produce-exception", lambda x: int("ASD") - x))

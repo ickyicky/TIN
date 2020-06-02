@@ -10,3 +10,4 @@ class Statuses(enum.Enum):
     OK = 200
     PARTIAL_CONTENT = 206
     SERVER_ERROR = 500
+    LOCKED = 423
