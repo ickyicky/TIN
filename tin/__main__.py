@@ -9,6 +9,7 @@ from .auth.Auth import Authorization
 from . import domain
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+from logging.handlers import RotatingFileHandler
 import logging
 import ssl
 import argparse
@@ -69,6 +70,7 @@ if __name__ == "__main__":
         superuser.first_name = "Super"
         superuser.last_name = "User"
         superuser.password_set("AdMiNiStRaToR1@3")
+        superuser.role = domain.User.Role.admin.value
         dbssn.add(superuser)
         dbssn.commit()
 

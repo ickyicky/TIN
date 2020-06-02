@@ -12,13 +12,16 @@ def FileGet(file_path, request):
     offset = 0
     lenght = None
     if range_:
-        assert range_.startswith("bytes=")
-        range_ = range_.replace("bytes=", "")
-        offset, lenght = range_.split("-")
-        if offset:
-            offset = int(offset)
-        if lenght:
-            lenght = int(lenght) - offset + 1
+        try:
+            assert range_.startswith("bytes=")
+            range_ = range_.replace("bytes=", "")
+            offset, lenght = range_.split("-")
+            if offset:
+                offset = int(offset)
+            if lenght:
+                lenght = int(lenght) - offset + 1
+        except:
+            return HTTPResponse(Statuses.BAD_REQUEST)
     try:
         assert not file_path.startswith("/")
         assert lenght is None or lenght > 0
@@ -32,6 +35,8 @@ def FileGet(file_path, request):
             total_size = os.stat(file_path).st_size
             range_from = offset
             range_to = offset + lenght - 1 if lenght else total_size
+            if range_to >= total_size:
+                range_to = total_size - 1
             headers["Content-Range"] = f"bytes {range_from}-{range_to}/{total_size}"
             status = Statuses.PARTIAL_CONTENT
 
@@ -57,6 +62,7 @@ def FilePost(file_path, request):
             assert range_to >= range_from
             assert range_to < total_bytes
             offset = range_from
+            assert range_to - range_from + 1 == len(request.data)
         except:
             return HTTPResponse(Statuses.BAD_REQUEST)
 

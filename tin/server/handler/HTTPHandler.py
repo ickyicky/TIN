@@ -35,7 +35,12 @@ class HTTPHandler:
         if not initial_data:
             raise ClosedConnection()
 
-        headers, method, data = self.parser(initial_data)
+        try:
+            headers, method, data = self.parser(initial_data)
+        except Exception as e:
+            log.error(e)
+            log.error(initial_data)
+            raise e
 
         while len(data) < int(headers.get("Content-Length", 0)):
             data += conn.recv(self.packet_size)
@@ -107,20 +112,24 @@ class HTTPHandler:
         close_connection = False
 
         while not close_connection:
+            request = None
             try:
-                request = None
-                try:
-                    request = self.receive(conn)
-                    self.process_request(request)
-                    response = self.handle_request(request)
-                except HTTPException as e:
-                    log.warn(f"{e.status} {e.message}")
-                    request = request or HTTPRequest({}, None)
-                    response = HTTPResponse(e.status, e.message)
-                except ClosedConnection:
-                    close_connection = True
-                    break
+                request = self.receive(conn)
+                self.process_request(request)
+                response = self.handle_request(request)
+            except HTTPException as e:
+                log.warn(f"{e.status} {e.message}")
+                request = request or HTTPRequest({}, None)
+                response = HTTPResponse(e.status, e.message)
+            except ClosedConnection:
+                close_connection = True
+                break
+            except Exception as e:
+                status = Statuses.SERVER_ERROR
+                response = HTTPResponse(status)
+                log.exception(e)
 
+            try:
                 self.process_response(response, request)
             except Exception as e:
                 status = Statuses.SERVER_ERROR
@@ -129,7 +138,7 @@ class HTTPHandler:
 
             close_connection = response.close_connection()
             log.info(
-                f"{response.status} {len(response.data) if response.data else 0} {response.headers._headers}"
+                f"{response.status} {len(response.data) if response.data else 0} {response.data[:30] if response.data else ''} {response.headers._headers}"
             )
             self.return_(conn, response)
             if not close_connection:

@@ -1,6 +1,8 @@
 from . import base
 from .. import domain
 import logging
+from ..server.handler.HTTPExceptions import HTTPException
+from ..server.response import Statuses
 
 log = logging.getLogger(__name__)
 
@@ -48,3 +50,21 @@ class UserWriteSerializer(base.ModelSerializer):
     def additional_modifications(cls, data, request, obj):
         if data.get("password"):
             obj.password_set(data["password"])
+
+
+class UserPasswordChangeSerializer(base.ModelSerializer):
+    old_password = base.StringSerializer(min_length=8, max_length=100, required=True)
+    new_password = base.StringSerializer(
+        min_length=8, max_length=100, method=password_is_secure, required=True
+    )
+
+    class Meta:
+        fields = ("old_password", "new_password")
+        model = domain.User
+
+    @classmethod
+    def additional_modifications(cls, data, request, obj):
+        if not obj.password_check(data["old_password"]):
+            raise HTTPException(Statuses.BAD_REQUEST, "Invalid old password")
+
+        obj.password_set(data["new_password"])

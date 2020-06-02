@@ -2,6 +2,8 @@ import datetime
 import jwt
 import logging
 import traceback
+import random
+import string
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +51,7 @@ class Authorization:
             "last_name": user.last_name,
             "user_id": user.id,
             "expires": expires.timestamp(),
+            "hash": "".join(random.choice(string.ascii_letters) for i in range(30)),
         }
         encoded_jwt = jwt.encode(payload, self.secret, algorithm="HS256")
         return encoded_jwt.decode()

@@ -27,7 +27,7 @@ def needs_role(role):
 
             if request.user.role != role:
                 raise HTTPException(
-                    status=Statuses.NOT_ALLOWED,
+                    status=Statuses.FORBIDDEN,
                     message=f"Insufisient priviliges a{request.user.role}a{role}a",
                 )
             return func(*args, request=request, **kwargs)
@@ -53,6 +53,9 @@ class AuthGuardian:
         request.user = user
 
     def process_response(self, response, request):
+        if response.headers.get("Authorization") is not None:
+            return
+
         token = request.headers.get("Authorization")
         if token:
             response.headers.update(Authorization=token)

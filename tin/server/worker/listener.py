@@ -48,7 +48,7 @@ class SocketListener:
         """
         self.init_socket()
         self.listen()
-        # TODO
+
         while True:
             self.receive()
 
