@@ -187,7 +187,7 @@ def DeleteDir(dir_path, request, recursive="False"):
                     os.rmdir(os.path.join(root, name))
         os.rmdir(dir_path)
         return HTTPResponse(Statuses.OK)
-    except (FileNotFoundError, NotADirectoryError, OSError):
+    except FileNotFoundError:
         return HTTPResponse(Statuses.NOT_FOUND)
-    except AssertionError:
+    except (AssertionError, NotADirectoryError, OSError):
         return HTTPResponse(Statuses.BAD_REQUEST)

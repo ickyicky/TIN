@@ -32,11 +32,11 @@ class BaseSerializer:
                 assert (
                     request.dbssn.query(model).filter_by(**{field: result}).first()
                     is None
-                )
+                ), "not unique"
 
             return result
-        except:
-            raise ValidationError("Invalid value")
+        except Exception as e:
+            raise ValidationError(f"Invalid value, {e.args[0] if len(e.args) > 0 else repr(e)}")
 
     def parse(self, value=None):
         return value
@@ -98,6 +98,7 @@ class ModelSerializer:
         cls.additional_modifications(data, request, obj)
 
         request.dbssn.add(obj)
+        request.dbssn.flush()
         request.dbssn.commit()
         return obj
 

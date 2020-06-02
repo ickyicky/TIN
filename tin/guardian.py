@@ -12,7 +12,7 @@ class ResourceGuardian:
     fairly easy. It sotres information about locked paths in db.
     """
 
-    SAFE_OPERATIONS = (PathLock.Method.read.value, PathLock.Method.read.value)
+    SAFE_OPERATIONS = [(PathLock.Method.read.value, PathLock.Method.read.value)]
 
     def __init__(self, request):
         self.path = None
