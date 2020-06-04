@@ -13,5 +13,5 @@ class DatabaseMiddleware:
     def process_response(self, response, request):
         try:
             request.dbssn.close()
-        except Exception as e:
-            log.exception(e)
+        except AttributeError:
+            pass

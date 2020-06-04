@@ -27,8 +27,7 @@ def needs_role(role):
 
             if request.user.role != role:
                 raise HTTPException(
-                    status=Statuses.FORBIDDEN,
-                    message="Insufisient priviliges",
+                    status=Statuses.FORBIDDEN, message="Insufisient priviliges",
                 )
             return func(*args, request=request, **kwargs)
 

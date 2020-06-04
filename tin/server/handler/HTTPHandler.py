@@ -2,6 +2,7 @@ import logging
 import socket
 import enum
 import traceback
+import datetime
 from ..router import Router
 from ..response import HTTPResponse, Statuses
 from ..request import HTTPRequest
@@ -120,6 +121,7 @@ class HTTPHandler:
         close_connection = False
 
         while not close_connection:
+            received_dtime = datetime.datetime.now()
             request = None
             try:
                 request = self.receive(conn)
@@ -141,8 +143,18 @@ class HTTPHandler:
                 break
 
             close_connection = response.close_connection()
+
+            try:
+                path = request.path
+            except:
+                path = "UNKNOWN"
+            processed_dtime = datetime.datetime.now()
+
             log.info(
-                f"{response.status} {len(response.data) if response.data else 0} {response.data[:30] if response.data else ''} {response.headers._headers}"
+                path
+                + f" {response.status} {len(response.data) if response.data else 0}"
+                + f" {response.data[:10] if response.data else ''}"
+                + f" took: {(processed_dtime - received_dtime).total_seconds()}"
             )
             self.return_(conn, response)
             if not close_connection:

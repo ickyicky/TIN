@@ -36,7 +36,9 @@ class BaseSerializer:
 
             return result
         except Exception as e:
-            raise ValidationError(f"Invalid value, {e.args[0] if len(e.args) > 0 else repr(e)}")
+            raise ValidationError(
+                f"Invalid value, {e.args[0] if len(e.args) > 0 else repr(e)}"
+            )
 
     def parse(self, value=None):
         return value
